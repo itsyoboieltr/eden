@@ -191,14 +191,8 @@ const createProxy = (
                     ? initialBody
                     : undefined
 
-            const {
-                $query,
-                $fetch,
-                $headers,
-                $transform,
-                getRaw,
-                ...restBody
-            } = initialBody ?? {}
+            const { $query, $fetch, $headers, $transform, getRaw, ...restBody } =
+                initialBody ?? {}
 
             bodyObj ??= restBody
 
@@ -236,9 +230,7 @@ const createProxy = (
                     )
                 )
 
-            const execute = async <T extends EdenTreaty.ExecuteOptions>(
-                modifiers: T
-            ): Promise<EdenTreaty.ExecuteReturnType<T>> => {
+            const execute = async <T extends EdenTreaty.ExecuteOptions>(modifiers: T): Promise<EdenTreaty.ExecuteReturnType<T>> => {
                 let body: any
 
                 const headers = {
@@ -252,8 +244,8 @@ const createProxy = (
                     body = Object.keys(bodyObj).length
                         ? bodyObj
                         : Array.isArray(bodyObj)
-                        ? bodyObj
-                        : undefined
+                          ? bodyObj
+                          : undefined
 
                     const isObject =
                         typeof body === 'object' || Array.isArray(bodyObj)
@@ -341,23 +333,27 @@ const createProxy = (
                         ? new EdenFetchError(response.status, data)
                         : null
 
-                let executeReturn = {
-                    data,
-                    error,
-                    response,
-                    status: response.status,
-                    headers: response.headers
-                }
-
                 if (transforms)
                     for (const transform of transforms) {
-                        let temp = transform(executeReturn)
+                        let temp = transform({
+                            data,
+                            status: response.status,
+                            headers: response.headers,
+                            response,
+                            error
+                        })
                         if (temp instanceof Promise) temp = await temp
-                        if (temp !== undefined && temp !== null)
-                            executeReturn = temp as any
+
+                        if (temp !== undefined && temp !== null) data = temp
                     }
 
-                return executeReturn as any
+                return {
+                    data,
+                    error,
+                    response: response,
+                    status: response.status,
+                    headers: response.headers
+                } as any
             }
 
             return execute({ getRaw })
